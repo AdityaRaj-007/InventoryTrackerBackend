@@ -1,11 +1,7 @@
 import mongoose from "mongoose";
-import { moveMessagePortToContext } from "node:worker_threads";
+import { env } from "../shared/config/env";
 
-const MONGO_URI = process.env.MONOGO_URI;
-
-if (!MONGO_URI) {
-  throw Error("MongoDb URL is not mentioned");
-}
+const MONGO_URI = env.mongoUri;
 
 export const connectDb = async () => {
   try {
