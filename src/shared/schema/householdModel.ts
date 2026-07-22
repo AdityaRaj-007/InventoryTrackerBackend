@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const householdSchema = new Schema(
+export const householdSchema = new Schema(
   {
     flatNumber: {
       type: String,
@@ -8,9 +8,11 @@ const householdSchema = new Schema(
     },
     apartmentName: { type: String, required: true },
     name: { type: String },
-    inviteCode: { type: Number, required: true },
+    inviteCode: { type: String, required: true, unique: true },
   },
   { timestamps: true },
 );
+
+householdSchema.index({ flatNumber: 1, apartmentName: 1 }, { unique: true });
 
 export const Household = mongoose.model("Households", householdSchema);

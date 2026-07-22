@@ -1,13 +1,26 @@
 import Router from "express";
 import { validate } from "../../shared/middlewares/validationMiddleware";
-import { CreateHouseholdSchema } from "./household.schema";
-import { CreateHouseholdBody } from "./household.types";
+import { CreateHouseholdSchema, JoinHouseholdSchema } from "./household.schema";
+import { CreateHouseholdBody, JoinHouseholdBody } from "./household.types";
+import { householdController } from "./household.controller";
 
 const router = Router();
 
 router.post<{}, {}, CreateHouseholdBody>(
   "/",
   validate({ body: CreateHouseholdSchema }),
+  householdController.create.bind(householdController),
+);
+
+router.post<{}, {}, JoinHouseholdBody>(
+  "/join",
+  validate({ body: JoinHouseholdSchema }),
+  householdController.joinHousehold.bind(householdController),
+);
+
+router.get(
+  "/",
+  householdController.getHouseholdDetails.bind(householdController),
 );
 
 export default router;

@@ -8,7 +8,8 @@ export const authenticate = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const authHeader = req.header("authorized");
+  const authHeader = req.header("authorization");
+  console.log(authHeader);
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res
@@ -17,7 +18,7 @@ export const authenticate = async (
   }
 
   const token = authHeader.split("Bearer ")[1];
-
+  console.log(token);
   if (!token) {
     return res
       .status(401)

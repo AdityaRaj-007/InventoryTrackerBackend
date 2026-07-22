@@ -5,3 +5,7 @@ export const CreateHouseholdSchema = z.object({
   apartmentName: z.string(),
   name: z.string().optional(),
 });
+
+export const JoinHouseholdSchema = z.object({
+  inviteCode: z.string(),
+});
