@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { HouseholdService, householdService } from "./household.service";
 import { CreateHouseholdBody, JoinHouseholdBody } from "./household.types";
+import { success } from "zod";
 
 export class HouseholdController {
   private readonly householdService: HouseholdService;
@@ -74,7 +75,93 @@ export class HouseholdController {
     }
   }
 
-  async getHouseholdDetails(req: Request, res: Response, next: NextFunction) {}
+  async getHouseholdDetails(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user;
+
+      if (!user) {
+        return res
+          .status(401)
+          .json({ success: false, data: null, error: "UNAUTHORIZED" });
+      }
+
+      const data = await this.householdService.getHouseholdDetails(user.id);
+
+      return res.status(200).json({ success: true, data, error: null });
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ success: false, data: null, error: "SERVER_ERROR" });
+    }
+  }
+
+  async getHouseholdMemberDetails(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const user = req.user;
+
+      if (!user) {
+        return res
+          .status(401)
+          .json({ success: false, data: null, error: "UNAUTHORIZED" });
+      }
+
+      const data = await this.householdService.getHouseholdMembersList(user.id);
+
+      return res.status(200).json({ success: true, data, error: null });
+    } catch (err) {
+      return res
+        .status(500)
+        .json({ success: false, data: null, error: "SERVER_ERROR" });
+    }
+  }
+
+  async leaveHousehold(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user;
+      if (!user) {
+        return res
+          .status(401)
+          .json({ success: false, data: null, error: "UNAUTHORIZED" });
+      }
+
+      await this.householdService.leaveHousehold(user.id);
+
+      return res.status(200).json({
+        success: true,
+        data: { message: "Household left successfully" },
+        error: null,
+      });
+    } catch (err) {
+      return res
+        .status(500)
+        .json({ success: false, data: null, error: "SERVER_ERROR" });
+    }
+  }
+
+  async regenrateInviteCode(req: Request, res: Response, next: NextFunction) {
+    try {
+      const user = req.user;
+
+      if (!user) {
+        return res
+          .status(401)
+          .json({ success: false, data: null, error: "UNAUTHORIZED" });
+      }
+
+      const data = await this.householdService.regenerateCode(user.id);
+
+      return res.status(201).json({ success: true, data, error: null });
+    } catch (err) {
+      return res
+        .status(500)
+        .json({ success: false, data: null, error: "SERVER_ERROR" });
+    }
+  }
 }
 
 export const householdController = new HouseholdController(householdService);

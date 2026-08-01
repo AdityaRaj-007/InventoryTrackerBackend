@@ -1,4 +1,8 @@
-import { HouseholdDocument, HouseholdMemberDocument } from "../household.types";
+import {
+  HouseholdDocument,
+  HouseholdMemberDocument,
+  HouseholdMemberWithUser,
+} from "../household.types";
 
 export interface IHouseholdRepository {
   create(
@@ -11,14 +15,6 @@ export interface IHouseholdRepository {
 
   join(userId: string, householdId: string): Promise<HouseholdMemberDocument>;
 
-  //   getHouseholdDetails(householdId: string): Promise<HouseholdDocument>;
-
-  //   getHouseholdMembers(householdId: string): Promise<HouseholdDocument>;
-
-  //   leave(householdId: string): Promise<HouseholdDocument>;
-
-  //   regenerateInviteCode(householdId: string): Promise<HouseholdDocument>;
-
   findHousehold(
     flatNumber: string,
     apartmentName: string,
@@ -26,5 +22,20 @@ export interface IHouseholdRepository {
 
   findHouseholdByInviteCode(
     inviteCode: string,
+  ): Promise<HouseholdDocument | null>;
+
+  findHouseholdMember(userId: string): Promise<HouseholdMemberDocument | null>;
+
+  getMembersOfHousehold(
+    householdId: string,
+  ): Promise<HouseholdMemberWithUser[] | null>;
+
+  getHouseholdDetails(householdId: string): Promise<HouseholdDocument | null>;
+
+  leave(householdId: string, userId: string): Promise<void>;
+
+  updateInviteCode(
+    householdId: string,
+    newInviteCode: string,
   ): Promise<HouseholdDocument | null>;
 }

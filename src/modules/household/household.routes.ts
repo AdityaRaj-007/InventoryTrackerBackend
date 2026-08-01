@@ -23,4 +23,19 @@ router.get(
   householdController.getHouseholdDetails.bind(householdController),
 );
 
+router.get(
+  "/members",
+  householdController.getHouseholdMemberDetails.bind(householdController),
+);
+
+router.post(
+  "/leave",
+  householdController.leaveHousehold.bind(householdController),
+);
+
+router.post(
+  "/invite-code/regenerate",
+  householdController.regenrateInviteCode.bind(householdController),
+);
+
 export default router;

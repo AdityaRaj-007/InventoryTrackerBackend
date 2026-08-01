@@ -13,7 +13,7 @@ export const householdMemberSchema = new Schema(
       ref: "Household",
       required: true,
     },
-    role: { type: String, enum: ["ADMIN", "MEMBER"] },
+    role: { type: String, enum: ["ADMIN", "MEMBER"], required: true },
     memberNumber: { type: Number, required: true },
     joinedAt: { type: Date, default: Date.now },
   },

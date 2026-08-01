@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 import { Household } from "../../../shared/schema/householdModel";
-import { HouseholdDocument, HouseholdMemberDocument } from "../household.types";
+import {
+  HouseholdDocument,
+  HouseholdMemberDocument,
+  HouseholdMemberWithUser,
+  PopulatedHouseholdMember,
+  PopulatedUser,
+} from "../household.types";
 import { IHouseholdRepository } from "./household.repository";
 import { HouseholdMember } from "../../../shared/schema/householdMemberModel";
 
@@ -74,14 +80,6 @@ export class MongoDbRepository implements IHouseholdRepository {
     }
   }
 
-  //   async getHouseholdDetails(householdId: string): Promise<HouseholdDocument> {}
-
-  //   async getHouseholdMembers(householdId: string): Promise<HouseholdDocument> {}
-
-  //   async leave(householdId: string): Promise<HouseholdDocument> {}
-
-  //   async regenerateInviteCode(householdId: string): Promise<HouseholdDocument> {}
-
   async findHousehold(
     flatNumber: string,
     apartmentName: string,
@@ -93,6 +91,91 @@ export class MongoDbRepository implements IHouseholdRepository {
     inviteCode: string,
   ): Promise<HouseholdDocument | null> {
     return await Household.findOne({ inviteCode });
+  }
+
+  async findHouseholdMember(
+    userId: string,
+  ): Promise<HouseholdMemberDocument | null> {
+    return await HouseholdMember.findOne({ userId });
+  }
+
+  async getMembersOfHousehold(
+    householdId: string,
+  ): Promise<HouseholdMemberWithUser[] | null> {
+    const members = await HouseholdMember.find({ householdId })
+      .populate<{ userId: PopulatedUser }>("userId", "_id name email")
+      .lean<PopulatedHouseholdMember[]>();
+
+    return members.map((member) => ({
+      role: member.role,
+      memberNumber: member.memberNumber,
+      user: {
+        id: member.userId._id.toString(),
+        name: member.userId.name,
+        email: member.userId.email,
+      },
+      householdId: member.householdId.toString(),
+      joinedAt: member.joinedAt.toISOString(),
+    }));
+  }
+
+  async getHouseholdDetails(
+    householdId: string,
+  ): Promise<HouseholdDocument | null> {
+    return await Household.findById({ _id: householdId });
+  }
+
+  async leave(householdId: string, userId: string): Promise<void> {
+    const session = await mongoose.startSession();
+
+    try {
+      await session.withTransaction(async () => {
+        console.log(householdId);
+        console.log(typeof householdId);
+        const members = await HouseholdMember.find().session(session);
+
+        console.log("Members list : " + members);
+
+        await HouseholdMember.deleteOne({ userId, householdId }).session(
+          session,
+        );
+
+        if (members.length < 1) {
+          // delete the inventory for the household as last member also left
+          return;
+        }
+
+        const oldestMember = await HouseholdMember.findOne({ householdId })
+          .sort({ memberNumber: 1 })
+          .session(session);
+
+        console.log(oldestMember);
+
+        if (!oldestMember) {
+          throw new Error("No members found after deletion.");
+        }
+
+        await HouseholdMember.updateOne(
+          { _id: oldestMember._id },
+          { $set: { role: "ADMIN" } },
+          { session },
+        );
+      });
+    } finally {
+      await session.endSession();
+    }
+  }
+
+  async updateInviteCode(
+    householdId: string,
+    newInviteCode: string,
+  ): Promise<HouseholdDocument | null> {
+    await Household.updateOne(
+      { _id: householdId },
+      { $set: { inviteCode: newInviteCode } },
+    );
+
+    return await Household.findOne({ _id: householdId });
   }
 }
 
